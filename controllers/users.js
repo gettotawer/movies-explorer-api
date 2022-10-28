@@ -22,7 +22,7 @@ const createUser = (req, res, next) => {
       useProjection: true,
     }))).catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные при обновлении профиля.'));
+        next(new ValidationError('Переданы некорректные данные при создании профиля.'));
       } else if (err.code === 11000) {
         next(new RegisterError('Пользователь с таким email уже существует'));
       } else {
@@ -63,20 +63,26 @@ const login = (req, res, next) => {
 
 const updateUserInformation = (req, res, next) => {
   const { name, email } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, email }, {
-    new: true, // обработчик then получит на вход обновлённую запись
-    runValidators: true,
-  }).then((user) => {
-    res.send(user);
-  }).catch((error) => {
-    if (error.name === 'CastError') {
-      return next(new ValidationError('Переданы некорректные данные при поиске пользователя.'));
-    }
-    if (error.name === 'ValidationError') {
-      return next(new ValidationError('Переданы некорректные данные при обновлении профиля.'));
-    }
-    return next(error);
-  });
+  User.findOne({ email })
+    .then((user) => {
+      if (user && user._id.toString() !== req.user._id) {
+        return next(new RegisterError('Пользователь с таким email уже существует'));
+      }
+      return User.findByIdAndUpdate(req.user._id, { name, email }, {
+        new: true, // обработчик then получит на вход обновлённую запись
+        runValidators: true,
+      }).then((updatedUser) => {
+        res.send(updatedUser);
+      }).catch((error) => {
+        if (error.name === 'CastError') {
+          return next(new ValidationError('Переданы некорректные данные при поиске пользователя.'));
+        }
+        if (error.name === 'ValidationError') {
+          return next(new ValidationError('Переданы некорректные данные при обновлении профиля.'));
+        }
+        return next(error);
+      });
+    }).catch(next);
 };
 
 const getUserInformation = (req, res, next) => {

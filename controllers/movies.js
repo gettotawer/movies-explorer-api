@@ -10,7 +10,7 @@ const createMovie = (req, res, next) => {
     year,
     description,
     image,
-    trailer,
+    trailerLink,
     nameRU,
     nameEN,
     thumbnail,
@@ -23,7 +23,7 @@ const createMovie = (req, res, next) => {
     year,
     description,
     image,
-    trailer,
+    trailerLink,
     nameRU,
     nameEN,
     thumbnail,
@@ -31,7 +31,7 @@ const createMovie = (req, res, next) => {
     owner: req.user._id,
   }).then((movieData) => {
     Movie.findById(movieData._id)
-      .populate('owner').then((newMovieData) => {
+      .then((newMovieData) => {
         res.send(newMovieData);
       });
   }).catch((error) => {
@@ -43,7 +43,7 @@ const createMovie = (req, res, next) => {
 };
 
 const getAllMovies = (req, res, next) => {
-  Movie.find({ owner: req.user._id }).populate('owner')
+  Movie.find({ owner: req.user._id })
     .then((movies) => {
       res.send(movies);
     })
@@ -52,7 +52,7 @@ const getAllMovies = (req, res, next) => {
 
 const deleteMovieById = (req, res, next) => {
   Movie.findById(req.params.id)
-    .populate('owner').then((movie) => {
+    .then((movie) => {
       if (!movie) {
         return next(new NotFoundError('Фильм с указанным _id не найден.'));
       }
@@ -61,14 +61,14 @@ const deleteMovieById = (req, res, next) => {
         customErr.statusCode = 403;
         return next(customErr);
       }
-      return Movie.findByIdAndRemove(req.params.id).populate('owner').then((deletedMovie) => res.send(deletedMovie))
-        .catch((error) => {
-          if (error.name === 'CastError') {
-            return next(new ValidationError('Передан несуществующий _id фильма.'));
-          }
-          return next(error);
-        });
-    }).catch(next);
+      return Movie.findByIdAndRemove(req.params.id).then((deletedMovie) => res.send(deletedMovie))
+        .catch(next);
+    }).catch((error) => {
+      if (error.name === 'CastError') {
+        return next(new ValidationError('Передан несуществующий _id фильма.'));
+      }
+      return next(error);
+    });
 };
 
 module.exports = {
