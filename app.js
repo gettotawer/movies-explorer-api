@@ -6,7 +6,7 @@ const cors = require('cors');
 const { celebrate, Joi, errors } = require('celebrate');
 require('dotenv').config();
 const { allowedCors } = require('./consts/allowedCors');
-const router = require('./routes/index');
+const router = require('./routes');
 const { login, createUser } = require('./controllers/users');
 const { isAuthorizedMiddleware } = require('./middlewares/auth');
 const NotFoundError = require('./errors/notFoundError');
@@ -46,7 +46,7 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
-app.use('/', isAuthorizedMiddleware, router);
+app.use('', isAuthorizedMiddleware, router);
 
 app.post('/signout', (req, res) => {
   res.clearCookie('jwt', {

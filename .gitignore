@@ -6,8 +6,8 @@ logs
 npm-debug.log*
 request.log
 error.log
-users.js
-movies.js
+# users.js
+# movies.js
 
 # # Dependency directory
 # node_modules
